@@ -1,0 +1,33 @@
+{
+"jobDefinitionName": "Namd-MPI-JobDefinition", 
+"type": "multinode",
+"nodeProperties": { 
+"numNodes": 4,
+"mainNode": 0, 
+"nodeRangeProperties": [
+{
+"targetNodes": "0:", 
+"container": {
+"user": "efauser",
+"image": "792182219598.dkr.ecr.us-east-1.amazonaws.com/namd-docker-20200821", 
+"vcpus": 96,
+"memory": 240000, 
+"linuxParameters": {
+"devices": [
+{
+"hostPath": "/dev/infiniband/uverbs0"
+}
+]
+},
+"ulimits": [
+{
+"hardLimit": -1,
+"name": "memlock", 
+"softLimit": -1
+}
+]
+}
+}
+]
+}
+}

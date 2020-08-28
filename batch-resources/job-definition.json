@@ -1,0 +1,73 @@
+{
+    "jobDefinitionName": "nvidia-namd-jobdef",
+    "type": "multinode",
+    "parameters": {},
+    "nodeProperties": {
+        "numNodes": 2,
+        "mainNode": 0,
+        "nodeRangeProperties": [
+            {
+                "targetNodes": "0:1",
+                "container": {
+                    "image": "792182219598.dkr.ecr.us-east-2.amazonaws.com/nvidia-docker-namd:latest",
+                    "vcpus": 8,
+                    "memory": 24000,
+                    "command": [],
+                    "jobRoleArn": "arn:aws:iam::792182219598:role/BatchJobRole",
+                    "volumes": [
+                        {
+                            "host": {
+                                "sourcePath": "/scratch"
+                            },
+                            "name": "scratch"
+                        },
+                        {
+                            "host": {
+                                "sourcePath": "/efs"
+                            },
+                            "name": "efs"
+                        }
+                    ],
+                    "environment": [
+                        {
+                            "name": "SCRATCH_DIR",
+                            "value": "/scratch"
+                        },
+                        {
+                            "name": "JOB_DIR",
+                            "value": "/efs"
+                        },
+                        {
+                            "name": "OMP_THREADS",
+                            "value": "2"
+                        },
+                        {
+                            "name": "MPI_THREADS",
+                            "value": "1"
+                        },
+                        {
+                            "name": "S3_INPUT",
+                            "value": "s3://batch-workshop-ba5b91a8/1CGZ.tar.gz"
+                        },
+                        {
+                            "name": "S3_OUTPUT",
+                            "value": "s3://batch-workshop-ba5b91a8"
+                        }
+                    ],
+                    "mountPoints": [
+                        {
+                            "containerPath": "/scratch",
+                            "sourceVolume": "scratch"
+                        },
+                        {
+                            "containerPath": "/efs",
+                            "sourceVolume": "efs"
+                        }
+                    ],
+                    "ulimits": [],
+                    "instanceType": "p3.2xlarge"
+                }
+            }
+        ]
+    }
+}
