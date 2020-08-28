@@ -1,28 +1,29 @@
 # Workshop for running Namd on on AWS Batch
 
 
+* `POSTFIX=$(uuidgen --random | cut -d'-' -f1)`
 
 ## Prepare the Docker image
 
 * Download the workshop example code:
 
-    * `git clone https://github.com/swajahataziz/aws-batch-nextflow-genomics-ws.git`
-    * `cd aws-batch-nextflow-genomics-ws`
+    * `git clone https://github.com/swajahataziz/namd-aws-batch`
+    * `namd-aws-batch`
 
 * Create the docker image
-    * `docker build --tag nextflow:latest .`
+    * `docker build --tag namd-docker:latest .`
 
 * Create an ECR repository
-    * `aws ecr create-repository --repository-name nextflow-${BUCKET_POSTFIX}`
-    * `ECR_REPOSITORY_URI=$(aws ecr describe-repositories --repository-names nextflow-${BUCKET_POSTFIX} --output text --query 'repositories[0].[repositoryUri]')`
+    * `aws ecr create-repository --repository-name namd-docker-${POSTFIX}`
+    * `ECR_REPOSITORY_URI=$(aws ecr describe-repositories --repository-names namd-docker-${POSTFIX} --output text --query 'repositories[0].[repositoryUri]')`
 
 * Push the docker image to the repository:
-    * Get login credentials: `aws ecr get-login --no-include-email --region us-east-2`
+    * Get login credentials: `aws ecr get-login --no-include-email --region us-east-1`
     * Copy and paste the result from previous command to login
     * `docker tag nextflow:latest $ECR_REPOSITORY_URI`
     * `docker push $ECR_REPOSITORY_URI`
     * Run the following command to get the image details:
-    `aws ecr describe-images --repository-name nextflow-${BUCKET_POSTFIX}`
+    `aws ecr describe-images --repository-name namd-docker-${BUCKET_POSTFIX}`
     * You will need the following information to construct and use the image URI at a later stage
     	* registryId
     	* repositoryName
@@ -199,188 +200,77 @@ This is a role used by individual Batch Jobs to specify permissions to AWS resou
 * Set the Role Name to **BatchJobRole**
 * Click **Create Role**
 
-## Create an EC2 Launch Template 
+## Configure AWS ECS Image with NVidia Docker
 
-Genomics is a data-heavy workload and requires some modification to the defaults used by AWS Batch for job processing. To efficiently use resources, AWS Batch places multiple jobs on an worker instance. The data requirements for individual jobs can range from a few MB to 100s of GB. Instances running workflow jobs will not know beforehand how much space is required, and need scalable storage to meet unpredictable runtime demands.
+To be able to run NVidia Docker containers, we need to create a machine image (AMI) based on one of the ECS-Optimised Amazon Linux AMIs and P3.2xlarge instance type, which has a NVidia Tesla V100 with 16GB memory. Please follow the following steps to create an ECS Image with NVidia Docker:
 
-To handle this use case, we can use a process that monitors a scratch directory on an instance and expands free space as needed based on capacity thresholds. This can be done using logical volume management and attaching EBS volumes as needed to the instances. 
+### Setup EC2 Image
 
-The ***EBS Autoscaling*** process requires a few small dependencies and a simple daemon installed on the host instance.
+1. Go to EC2 Console → Instances → Launch Instance
+2. In the search box under “Step 1: Choose an Amazon Machine Image (AMI)” type ECS
+3. Select “*Amazon ECS-Optimized Amazon Linux 2 AMI” *from the list
+4. Click on Continue when the “Amazon ECS-Optimised Amazon Linux 2 AMI” pricing page pops up
+5. Under “Step 2: Choose an Instance Type”, select p3.2xlarge
+6. Click Review and Launch → Launch
+7. Under ‘Select an existing key pair or create a new key pair’, 
+    1. select Choose and existing pair if you already have an EC2 key pair. 
+    2. Otherwise select ‘Create new key pair’ from the drop down box and enter a key name under ‘Key pair name’
 
-By default, AWS Batch uses the Amazon ECS-Optimized AMI to launch instances for running jobs. This is sufficient in most cases, but specialized needs, such as the large storage requirements noted above, require customization of the base AMI. Because the provisioning requirements for EBS autoscaling are fairly simple and light weight, one can use an EC2 Launch Template to customize instances.
 
-We will create a launch template using the Cloudformation template provided in the repo. To execute the CloudFormation template, copy the template YAML file to your S3 bucket:
+8. Click on Launch Instances
+9. Once the instance has started, use the instance’s public IP to SSH into the instance
+10. Once connected to the server, run the following:
+`sudo su
+ yum update -y
+ reboot #in order to update the kernel`
 
-* Replace with the S3 bucket name you have created before
-* `aws s3 cp genomics-launch-template.yaml s3://<bucket>/genomics-launch-template.yaml`
-* Go to CloudFormation console.
-* Click on **Create Stack** > **With new resources (standard)**
-* In **Amazon S3 URL** text box, provide the S3 bucket url plus the name of the yaml file in the format `https://s3.<region-name>.amazonaws.com/<bucketname>/genomics-launch-template.yaml`
-* Click **Next**
-* Provide a stack name
-* Under **Workflow Orchestrator** select nextflow
-* Click **Next** & **Next**
-* Click **Create Stack**
+11. SSH into the server once the system has rebooted
 
-## Create an AWS Batch Environment
-[AWS Batch](https://aws.amazon.com/batch/) is a managed service that helps you efficiently run batch computing workloads on the AWS Cloud. Users submit jobs to job queues, specifying the application to be run and the compute resources (CPU and memory) required by the job. AWS Batch is responsible for launching the appropriate quantity and types of instances needed to run your jobs.
+`sudo su
+ yum install -y gcc wget vim kernel-devel-$(uname -r)
+ wget http://us.download.nvidia.com/tesla/450.51.06/NVIDIA-Linux-x86_64-450.51.06.run
+ chmod +x NVIDIA-Linux-x86_64-450.51.06.run
+ ./NVIDIA-Linux-x86_64-450.51.06.run #follow the installation instructions 
+ reboot`
 
-AWS Batch manages the following resources:
+12. SSH into the server once the system has rebooted and run the following:
 
-* Job Definitions
-* Job Queues
-* Compute Environments
+`sudo nvidia-smi`
 
-At the end of this exercise, you will have an AWS Batch environment consisting of the following:
+13. It should produce a display similar to the following:
 
-* A Compute Environment that utilizes EC2 Spot instances for cost-effective computing
-* A Compute Environment that utilizes EC2 on-demand (e.g. public pricing) instances for high-priority work that can't risk job interruptions or delays due to insufficient Spot capacity.
-* A default Job Queue that utilizes the Spot compute environment first, but falls back to the on-demand compute environment if there is spare capacity available.
-* A high-priority Job Queue that leverages the on-demand and Spot CE's (in that order) and has higher priority than the default queue.
+![Image of Nvidia Docker](ecs-nvidia.png)
 
-### Setting up the Compute Environment
-[Compute environments](http://docs.aws.amazon.com/batch/latest/userguide/compute_environments.html) are effectively autoscaling clusters of EC2 instances that are launched to run your jobs. Unlike traditional HPC clusters, compute environments can be configured to use a variety of instance types and sizes. The AWS Batch job scheduler will do the heavy lifting of placing jobs on the most appropriate instance type based on the jobs resource requirements. Compute environments can also use either On-demand instances, or Spot instances for maximum cost savings. Job queues are mapped to one or more compute environments and a given environment can also be mapped to one or more job queues. This many-to-many relationship is defined by the compute environment order and job queue priority properties.
+14.  Next we will install nvidia-docker2 and set it up as the default docker runtime. To install nvidia-docker2:
 
-As mentioned earlier, we'll create the following compute environments:
+`distribution=$(. /etc/os-release;echo $ID$VERSION_ID)
+ curl -s -L https://nvidia.github.io/nvidia-docker/$distribution/nvidia-docker.repo | \
+ sudo tee /etc/yum.repos.d/nvidia-docker.repo
+ sudo yum install -y nvidia-docker2 
+ sudo pkill -SIGHUP dockerd`
 
-* An "optimal" compute environment using on-demand instances
-* An "optimal" compute environment using spot instances
+ 15. To set Nvidia docker as default runtime
 
-To create a compute environment we will follow these steps:
+ `sudo vim /etc/docker/daemon.json`
 
-#### Create an "optimal" on-demand compute environment
+ 16. append the following at the beginning of docker deamon config file, *“default-runtime”:”nvidia”.* The resulting document should look as follows:
 
-* Go to the AWS Batch Console
-* Click on **Compute environments**
-* Click on **Create environment**
-* Select **Managed** as the **Compute environment type**
-* For **Compute environment name** type: **ondemand**
-* In the **Service role** drop down, select the **AWSBatchServiceRole** you created previously
-* In the **Instance role** drop down, select the **ecsInstanceRole** you created previously
-* For **Provisioning model** select **On-Demand**
-* **Allowed instance types** will be already populated with **optimal** - which is a mixture of M4, C4, and R4 instances.
-* In the **Launch template** drop down, select the genomics-workflow-template you created previously
-* Set Minimum and Desired vCPUs to 0.
-* Optional: (Recommended) Add EC2 tags. These will help identify which EC2 instances were launched by AWS Batch. At minimum:
-	* Key: **Name**
-    * Value: **batch-ondemand-worker**
-* Click on "Create"
+ `{ *“default-runtime”:”nvidia”*, 
+“runtimes”:{ “nvidia”:{ “path”:”/usr/bin/nvidia-container-runtime”, “runtimeArgs”:[] } }
+}`
 
-#### Create an "optimal" spot compute environment
+17. Restart docker
 
-* Go to the AWS Batch Console
-* Click on **Compute environments**
-* Click on **Create environment**
-* Select **Managed** as the **Compute environment type**
-* For **Compute environment name** type: **spot**
-* In the **Service role** drop down, select the **AWSBatchServiceRole** you created previously
-* In the **Instance role** drop down, select the **ecsInstanceRole** you created previously
-* For **Provisioning model** select **Spot**
-* In **Maximum Price** text box, type 80
-* **Allowed instance types** will be already populated with **optimal** - which is a mixture of M4, C4, and R4 instances.
-* In the **Launch template** drop down, select the genomics-workflow-template you created previously
-* Set Minimum and Desired vCPUs to 0.
+`sudo service docker start`
 
-* Optional: (Recommended) Add EC2 tags. These will help identify which EC2 instances were launched by AWS Batch. At minimum:
-	* Key: **Name**
-	* Value: **batch-spot-worker**
+18. Test nvidia-smi with the nvidia cuda image
 
-Click on "Create"
+`docker run --rm nvidia/cuda nvidia-smi`
 
-### Setup Job Queues
+### Create the AMI
 
-AWS Batch job queues, are where you submit and monitor the status of jobs.
+1. Go to the EC2 Console
+2. Click on Instances and select the running instance. 
+3. Click on Action → Image → Create Image
+4. In Image name, enter namd-ami and click Create Image
 
-Job queues can be associated with one or more compute environments in a preferred order. Multiple job queues can be associated with the same compute environment. Thus to handle scheduling, job queues also have a priority weight as well.
-
-Below we'll create two job queues:
-
-* A **Default** job queue
-* A **High Priority** job queue
-
-#### Create a Default Job Queue
-
-This queue is intended for jobs that do not require urgent completion, and can handle potential interruption. This queue will schedule jobs to:
-
-* The **spot** compute environment
-* The **ondemand** compute environment in that order.
-
-Because it primarily leverages Spot instances, it will also be the most cost effective job queue.
-
-* Go to the AWS Batch Console
-* Click on **Job queues**
-* Click on **Create queue**
-* For **Queue name** use **default**
-* Set **Priority** to 1
-* Under **Connected compute environments for this queue**, using the drop down menu:
-	* Select the **spot** compute environment you created previously, then
-    * Select the **ondemand** compute environment you created previously
-* Click on **Create Job Queue**
-
-#### Create a "High_Priority" Job Queue
-
-This queue is intended for jobs that are urgent and cannot handle potential interruption. This queue will schedule jobs to:
-
-* The **ondemand** compute environment
-* The **spot** compute environment in that order.
-
-* Go to the AWS Batch Console
-* Click on **Job queues**
-* Click on **Create queue**
-* For **Queue name** use **highpriority**
-* Set **Priority** to 100 (higher values mean higher priority)
-* Under **Connected compute environments for this queue**, using the drop down menu:
-* Select the **ondemand** compute environment you created previously, then
-* Select the **spot** compute environment you created previously
-* Click on **Create Job Queue**
-
-### Setup a Job Definition
-
-* Go to the AWS Batch Console
-* Click on **Job definitions**
-* Click on **Create**
-* In **Job definition name** enter **nextflow**
-* In **Job attempts** enter 5
-* In Environment -> Job Role, select **BatchJobRole**
-* In Container Image text box, enter the URI of the image you created earlier. If you don't have the ARN, you can obtain it by following these steps:
-    * Run the following command to get the image details:
-    `aws ecr describe-images --repository-name nextflow`
-    * You will need the following information to construct and use the image URI at a later stage
-    	* registryId
-    	* repositoryName
-    	* imageTags
-    * The image URI can be constructed using the format `<registryId>.dkr.ecr.<region>.amazonaws.com/<repositoryName>:<imageTag>`
-* Enter 2 vCPU
-* Enter 1024 MB
-* In Environment variables, enter the following:
-	* Key: NF_LOGSDIR, Value: `s3://<bucket>/_nextflow/logs`
-	* Key: NF_JOB_QUEUE, Value: `<Default job Queue ARN>`
-	* Key: NF_WORKDIR, Value: `s3://<bucket>/_nextflow/runs`
-* Click on **Create Job Definition**
-
-## Describe Your Environment
-
-Now that you have configured your batch environment, run the following commands to take a look at what we have created so far:
-
-* `aws batch describe-compute-environments`
-* `aws batch describe-job-queues`
-* `aws batch describe-job-definitions`
-
-## Run your job(s)
-
-To run a workflow you submit a nextflow Batch job to the appropriate Batch Job Queue via:
-
-* the AWS Batch Console
-* or the command line with the AWS CLI
-
-This is what starting a workflow via the AWS CLI would look like using Nextflow's built-in **hello-world** workflow:
-
-`aws batch submit-job --job-name nf-hello --job-queue default --job-definition nextflow --container-overrides command=hello`
-
-After submitting a workflow, you can monitor the progress of tasks via the AWS Batch console. For the **Hello World** workflow above you will see five jobs run in Batch - one for the head node, and one for each Channel text as it goes through the hello process.
-
-For a more complex example, you can try the following, which will run the RNASeq workflow developed by the [NF-Core project](https://nf-co.re/) against data in the [1000 Genomes AWS Public Dataset](https://registry.opendata.aws/1000-genomes/):
-
-`aws batch submit-job --job-name nf-core-rnaseq --job-queue highpriority --job-definition nextflow --container-overrides command=nf-core/rnaseq,"--reads","'s3://1000genomes/phase3/data/HG00243/sequence_read/SRR*_{1,2}.filt.fastq.gz'","--genome","GRCh37","--skip_qc"`
-
-For the nf-core example "rnaseq" workflow you will see 11 jobs run in Batch over the course of a couple hours - the head node will last the whole duration of the pipeline while the others will stop once their step is complete. You can look at the CloudWatch logs for the head node job to monitor workflow progress. Note the additional single quotes wrapping the 1000genomes path.
