@@ -1,0 +1,20 @@
+{
+  "computeEnvironmentName": "EFA-Batch-ComputeEnvironment",
+  "type": "MANAGED",
+  "state": "ENABLED",
+  "computeResources": {
+    "type": "EC2",
+    "minvCpus": 0,
+    "maxvCpus": 960,
+    "desiredvCpus": 0,
+    "instanceTypes": [
+      "p3dn.24xlarge"
+    ],
+    "imageId": "<ami-id>",
+    "subnets": [
+      "<same-subnet-as-in-ami>"
+    ],
+    "instanceRole": "arn:aws:iam::<account-id>:instance-profile/ecsInstanceRole"
+  },
+  "serviceRole": "arn:aws:iam::<account-id>:role/AWSBatchServiceRole"
+}

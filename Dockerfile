@@ -60,5 +60,16 @@ RUN echo "export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/opt/openmpi/lib:/usr/local/cu
 
 ###################################################
 
+## supervisor container startup
 
-CMD /opt/openmpi/bin/mpirun --allow-run-as-root namd2 /apoa1/apoa1.namd
+ADD conf/supervisord/supervisord.conf /etc/supervisor/supervisord.conf
+ADD supervised-scripts/mpi-run.sh supervised-scripts/mpi-run.sh
+RUN chmod 755 supervised-scripts/mpi-run.sh
+
+EXPOSE 2022
+ADD batch-runtime-scripts/entry-point.sh batch-runtime-scripts/entry-point.sh
+RUN chmod 755 batch-runtime-scripts/entry-point.sh
+
+# CMD /opt/openmpi/bin/mpirun -n 5 --allow-run-as-root namd2 +p10 +idlepoll apoa1/apoa1.namd
+
+CMD /batch-runtime-scripts/entry-point.sh

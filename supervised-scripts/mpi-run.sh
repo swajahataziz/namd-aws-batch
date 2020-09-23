@@ -11,7 +11,7 @@ HOST_FILE_PATH="/tmp/hostfile"
 AWS_BATCH_EXIT_CODE_FILE="/tmp/batch-exit-code"
 
 aws s3 cp $S3_INPUT $SCRATCH_DIR
-tar -xvf $SCRATCH_DIR/*.tar.gz -C $SCRATCH_DIR
+#tar -xvf $SCRATCH_DIR/*.tar.gz -C $SCRATCH_DIR
 
 sleep 2
 
@@ -41,8 +41,7 @@ error_exit () {
 
 # Set child by default switch to main if on main node container
 NODE_TYPE="child"
-if [ "${AWS_BATCH_JOB_MAIN_NODE_INDEX}" == 
-"${AWS_BATCH_JOB_NODE_INDEX}" ]; then
+if [ "${AWS_BATCH_JOB_MAIN_NODE_INDEX}" == "${AWS_BATCH_JOB_NODE_INDEX}" ]; then
   log "Running synchronize as the main node"
   NODE_TYPE="main"
 fi
@@ -83,10 +82,11 @@ deduped
 
   cd $SCRATCH_DIR
 
-  /opt/openmpi/bin/mpirun --mca btl_tcp_if_include eth0 \
-                          -x PATH -x LD_LIBRARY_PATH \
-                          --allow-run-as-root \
-                          namd2 apoa1/apoa1.namd
+  /opt/openmpi/bin/mpirun -n 5 --allow-run-as-root namd2 +p10 +idlepoll /apoa1/apoa1.namd
+  #/opt/openmpi/bin/mpirun --mca btl_tcp_if_include eth0 \
+  #                        -x PATH -x LD_LIBRARY_PATH \
+  #                        --allow-run-as-root \
+  #                        namd2 apoa1/apoa1.namd
 
   sleep 2
 

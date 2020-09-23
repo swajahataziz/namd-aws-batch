@@ -1,0 +1,72 @@
+{
+    "jobDefinitionName": "Namd-MPI-Multinode",
+    "type": "container",
+    "parameters": {},
+    "containerProperties": {
+        "image": "<image-full-name>",
+        "vcpus": 200,
+        "memory": 200000,
+        "command": [],
+        "jobRoleArn": "arn:aws:iam::<account-id>:role/ecsTaskExecutionRole",
+        "volumes": [
+            {
+                "host": {
+                    "sourcePath": "/scratch"
+                },
+                "name": "scratch"
+            },
+            {
+                "host": {
+                    "sourcePath": "/local"
+                },
+                "name": "local"
+            }
+        ],
+        "environment": [
+            {
+                "name": "SCRATCH_DIR",
+                "value": "/scratch"
+            },
+            {
+                "name": "OMP_THREADS",
+                "value": "2"
+            },
+            {
+                "name": "MPI_THREADS",
+                "value": "1"
+            }
+        ],
+        "mountPoints": [
+            {
+                "containerPath": "/scratch",
+                "sourceVolume": "scratch"
+            },
+            {
+                "containerPath": "/usr/tmp",
+                "sourceVolume": "local"
+            }
+        ],
+        "privileged": false,
+        "ulimits": [
+            {
+                "hardLimit": -1,
+                "name": "memlock",
+                "softLimit": -1
+            }
+        ],
+        "resourceRequirements": [
+            {
+                "value": "1",
+                "type": "GPU"
+            }
+        ],
+        "linuxParameters": {
+            "devices": [
+                {
+                    "hostPath": "/dev/infiniband",
+                    "permissions": []
+                }
+            ]
+        }
+    }
+}
