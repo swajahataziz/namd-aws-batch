@@ -1,14 +1,33 @@
 # Workshop for running Namd on on AWS Batch
 
+## Create a Cloud9 Instance
 
-* `POSTFIX=$(uuidgen --random | cut -d'-' -f1)`
+AWS Cloud9 is a cloud-based integrated development environment (IDE) that lets you write, run, and debug your code with just a browser. This workshop uses Cloud9 to introduce you to the AWS Command Line Interface (AWS CLI) without the need to install any software on your laptop.
+
+AWS Cloud9 contains a collection of tools that let you code, build, run, test, debug, and release software in the cloud using your internet browser. The IDE offers support for python, pip, AWS CLI, and provides easy access to AWS resources through Identity and Access Management (IAM) user credentials. The IDE includes a terminal with sudo privileges to the managed instance that is hosting your development environment and a pre-authenticated CLI. This makes it easy for you to quickly run commands and directly access AWS services.
+
+To launch the Cloud9 IDE:
+
+* In the AWS Management Console, locate **Cloud9** by using the search bar, or choose **Services**, then **Cloud9**
+
+![Image of Console](cloud9-find.png)
+* Choose **Create Environment**
+* Name your environment **MyHPCLabEnv** and choose **Next Step**
+* On the **Configure Settings** page, locate **Cost-saving setting** drop-down menu, choose **After a day**
+* Choose Next Step.
+* Choose **Create Environment**
+
+Your AWS Cloud9 instance will be ready in a few minutes.
+![Image of Cloud9 starting page](cloud9-create.png)
 
 ## Prepare the Docker image
 
-* Download the workshop example code:
+* Open the Cloud9 terminal
+* Enter the following command to download the workshop example code:
 
     * `git clone https://github.com/swajahataziz/namd-aws-batch`
-    * `namd-aws-batch`
+* Switch to the source code directory as the working directory:
+    * `cd namd-aws-batch`
 
 * Create the docker image
     * `docker build --tag namd-docker:latest .`
