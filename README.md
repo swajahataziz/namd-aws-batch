@@ -1,6 +1,16 @@
 # Workshop for running Namd on on AWS Batch
+------------------------
+
+This workshop assumes that you run in the AWS N. Virigia region (us-east-1)
+
+## Workshop Setup
+------------------------
+
+* Login to the Event Engine
+    * `https://dashboard.eventengine.run/dashboard`
 
 ## Create a Cloud9 Instance
+------------------------
 
 AWS Cloud9 is a cloud-based integrated development environment (IDE) that lets you write, run, and debug your code with just a browser. This workshop uses Cloud9 to introduce you to the AWS Command Line Interface (AWS CLI) without the need to install any software on your laptop.
 
@@ -20,12 +30,25 @@ To launch the Cloud9 IDE:
 Your AWS Cloud9 instance will be ready in a few minutes.
 ![Image of Cloud9 starting page](cloud9-create.png)
 
+Once your Cloud9 instance is up and running:
+
+* In the AWS Management Console, locate **EC2** by using the search bar, or choose **Services**, then **EC2**
+* Go to **Elastic Block Storage** -> **Volumes**
+* Choose the EBS Volume for your Cloud9 environment
+![Image of EBS Console](EBS.png)
+* Select **Actions** -> **Modify Volume**
+* Increase the size to 30GB
+* Click **Modify**
+* Under **Are you sure that you want to modify volume vol-xxxxxxx?** Click Yes
+
+
 ## Prepare the Docker image
 
 * Open the Cloud9 terminal
 * Enter the following command to download the workshop example code:
 
-    * `git clone https://github.com/swajahataziz/namd-aws-batch`
+    * `git clone https://github.com/swajahataziz/namd-aws-batc`
+
 * Switch to the source code directory as the working directory:
     * `cd namd-aws-batch`
 
@@ -33,15 +56,16 @@ Your AWS Cloud9 instance will be ready in a few minutes.
     * `docker build --tag namd-docker:latest .`
 
 * Create an ECR repository
+    * `POSTFIX=$(uuidgen --random | cut -d'-' -f1)`
     * `aws ecr create-repository --repository-name namd-docker-${POSTFIX}`
     * `ECR_REPOSITORY_URI=$(aws ecr describe-repositories --repository-names namd-docker-${POSTFIX} --output text --query 'repositories[0].[repositoryUri]')`
 
 * Push the docker image to the repository:
     * Get login credentials: `$(aws ecr get-login --no-include-email --region us-east-1)`
-    * `docker tag nextflow:latest $ECR_REPOSITORY_URI`
+    * `docker tag namd-docker:latest $ECR_REPOSITORY_URI`
     * `docker push $ECR_REPOSITORY_URI`
     * Run the following command to get the image details:
-    `aws ecr describe-images --repository-name namd-docker-${BUCKET_POSTFIX}`
+    `aws ecr describe-images --repository-name namd-docker-${POSTFIX}`
     * You will need the following information to construct and use the image URI at a later stage
     	* registryId
     	* repositoryName
@@ -54,7 +78,7 @@ Your AWS Cloud9 instance will be ready in a few minutes.
 To allow AWS Batch to access the EC2 resources, we need to: 
 
 * Create 3 new Policies:
-	* **bucket-access-policy** to allow Batch to access the S3 bucket
+	* **bucket-access-policy** to allow Batch to access the S3 buckets
 	* **ebs-autoscale-policy** to allow the EC2 instance to autoscale the EBS
 
 * and add 3 new Roles:
@@ -63,22 +87,6 @@ To allow AWS Batch to access the EC2 resources, we need to:
 	* BatchJobRole
 	
 ## Access Policies
-### Bucket Access Policy
-
-* To configure a new policy
-	* In the IAM console, choose **Policies**, **Create policy**
-	* Select Service -> S3
-	* Select **All Actions**
-	* Under **Resources** select **accesspoint** > Any
-	* Under **Resources** select **job** > Any	
-	* Under **Resources** > bucket, click **Add ARN**
-		* Type in the name of the bucket you previously created
-		* Click **Add**
-	* Under **Resources** > object, click **Add ARN**
-		* For **Bucket Name** type in the name of the bucket
-		* Click **Object Name**, select **Any**
-	* Click Review Policy
-	* In the Review Policy Page, enter **bucket-access-policy** in the name field, and click Create Policy.
 
 ### EBS Autoscale Policy
 
@@ -106,6 +114,7 @@ To allow AWS Batch to access the EC2 resources, we need to:
 * Click **Create Policy**
 
 ## IAM Roles
+
 ### Create a Batch Service Role
 
 * In the IAM console, choose **Roles**, **Create New Role**.
@@ -137,8 +146,6 @@ This is a role that controls what AWS Resources EC2 instances launched by AWS Ba
 Enabling Read-Only access to all S3 resources is required if you use publicly available datasets such as the ones available in the [AWS Registry of Open Datasets](https://registry.opendata.aws/).
 
 
-* Type **bucket-access-policy** in the search field for policies
-* Click the checkbox next to **bucket-access-policy** to attach the policy
 * Type **ebs-autoscale-policy** in the search field for policies
 * Click the checkbox next to **ebs-autoscale-policy** to attach the policy
 * Click **Next: Tags**. (adding tags is optional)
@@ -159,9 +166,7 @@ This is a role used by individual Batch Jobs to specify permissions to AWS resou
 * Click **Next: Permissions**
 
 * Attach the following policies.
-	* **bucket-access-policy**
 	* **AmazonS3ReadOnlyAccess**
-	* **nextflow-batch-access-policy**
 
 * Click **Next: Tags**. (adding tags is optional)
 * Click **Next: Review**
@@ -385,5 +390,3 @@ Finally we can submit a job!
 ```bash
 aws batch submit-job --region ${AWS_REGION} --job-name example-mpi-job --job-queue EFA-Batch-JobQueue --job-definition EFA-MPI-JobDefinition
 ```
-
-
