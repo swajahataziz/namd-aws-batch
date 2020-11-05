@@ -242,28 +242,27 @@ aws ec2 create-placement-group --group-name "efa" --strategy "cluster" --region 
 3. Under “Step 2: Choose an Instance Type”, select p3dn.24xlarge
 4. Click 'Next: Configure Instance Details'
 5. Under "Step 3: Configure Instance Details"
-    i. Select the VPC you configured your security group with
-    ii. Select a public subnet
-    iii. Choose "Add Instance to Placement group" under "Placement group". Keep the default 'Add to existing placement group' option, click on the drop down and choose efa from the list of placement groups
-    iv. Under 'Elastic Fabric Adapter', click Enable
-7. Under "IAM role" select "ecsInstanceRole" from the drop down.
-8. Your screen should look similar to this:
+    1. Select the VPC you configured your security group with
+    2. Select a public subnet
+    3. Choose "Add Instance to Placement group" under "Placement group". Keep the default 'Add to existing placement group' option, click on the drop down and choose efa from the list of placement groups
+    4. Under 'Elastic Fabric Adapter', click Enable
+6. Under "IAM role" select "ecsInstanceRole" from the drop down.
+7. Your screen should look similar to this:
 
 ![Image of Instance Details](instance_details.png)
 
-9. Click "Next: Add Storage"
-10. Change the size of the Root directory to 20GB and click "Next: Add Tags" -> "Next: Configure Security Groups"
-11. Under "Step 6: Configure Security Group":
+8. Click "Next: Add Storage"
+9. Change the size of the Root directory to 20GB and click "Next: Add Tags" -> "Next: Configure Security Groups"
+10. Under "Step 6: Configure Security Group":
     a. Select "Select an existing security group"
     b. Select the security group you previously created from the drop down.
-12. Click Review and Launch → Launch
-13. Under ‘Select an existing key pair or create a new key pair’, 
+11. Click Review and Launch → Launch
+12. Under ‘Select an existing key pair or create a new key pair’, 
     1. select Choose and existing pair if you already have an EC2 key pair. 
     2. Otherwise select ‘Create new key pair’ from the drop down box and enter a key name under ‘Key pair name’
 
-
-14. Click on Launch Instances
-15. Once the instance has started, use the instance’s public IP to SSH into the instance
+13. Click on Launch Instances
+14. Once the instance has started, use the instance’s public IP to SSH into the instance
 
 ### Install Docker & Amazon ECS Container Agent
 
@@ -277,9 +276,9 @@ aws ec2 create-placement-group --group-name "efa" --strategy "cluster" --region 
 
 3. Install and enable the ecs Amazon Linux extra repository.
 
-    `sudo amazon-linux-extras install -y ecs`
+    * `sudo amazon-linux-extras install -y ecs`
 
-    `sudo systemctl enable --now ecs`
+    * `sudo systemctl enable --now ecs`
 
 4. You can verify that the agent is running and see some information about your new container instance with the agent introspection API.
 
@@ -307,9 +306,10 @@ aws ec2 create-placement-group --group-name "efa" --strategy "cluster" --region 
     `curl -O https://efa-installer.amazonaws.com/aws-efa-installer-latest.tar.gz`
 
 2. Extract the files from the compressed .tar.gz file and navigate into the extracted directory.
-    `tar -xf aws-efa-installer-latest.tar.gz`
+    
+    * `tar -xf aws-efa-installer-latest.tar.gz`
 
-    `cd aws-efa-installer`
+    * `cd aws-efa-installer`
 
 3. Install the EFA software. 
     
@@ -318,6 +318,7 @@ aws ec2 create-placement-group --group-name "efa" --strategy "cluster" --region 
 4. Log out of the instance and then log back in.
 
 5. Confirm that the EFA software components were successfully installed.
+
     `fi_info -p efa`
 
 ## Configure ECS Image with NVidia Docker
@@ -327,56 +328,51 @@ To be able to run NVidia Docker containers, we need to create a machine image (A
 
 1. SSH into the server
 
-    `sudo su`
+    * `sudo su`
+    * `yum install -y gcc wget vim kernel-devel-$(uname -r)`
+    * `wget http://us.download.nvidia.com/tesla/450.51.06/NVIDIA-Linux-x86_64-450.51.06.run`
+    * `chmod +x NVIDIA-Linux-x86_64-450.51.06.run`
+    * `./NVIDIA-Linux-x86_64-450.51.06.run` #follow the installation instructions 
+    * `reboot`
 
-    `yum install -y gcc wget vim kernel-devel-$(uname -r)`
- 
-    `wget http://us.download.nvidia.com/tesla/450.51.06/NVIDIA-Linux-x86_64-450.51.06.run`
-    
-    `chmod +x NVIDIA-Linux-x86_64-450.51.06.run`
-    
-    `./NVIDIA-Linux-x86_64-450.51.06.run` #follow the installation instructions 
-
-    `reboot`
-
-12. SSH into the server once the system has rebooted and run the following:
+2. SSH into the server once the system has rebooted and run the following:
 
     `sudo nvidia-smi`
 
-13. It should produce a display similar to the following:
+3. It should produce a display similar to the following:
 
 ![Image of Nvidia Docker](ecs-nvidia.png)
 
-14.  Next we will install nvidia-docker2 and set it up as the default docker runtime. To install nvidia-docker2:
+4.  Next we will install nvidia-docker2 and set it up as the default docker runtime. To install nvidia-docker2:
 
-    `distribution=$(. /etc/os-release;echo $ID$VERSION_ID)`
+    * `distribution=$(. /etc/os-release;echo $ID$VERSION_ID)`
 
-    `curl -s -L https://nvidia.github.io/nvidia-docker/$distribution/nvidia-docker.repo | \
+    * `curl -s -L https://nvidia.github.io/nvidia-docker/$distribution/nvidia-docker.repo | \ 
     sudo tee /etc/yum.repos.d/nvidia-docker.repo`
     
-    `sudo yum install -y nvidia-docker2` 
+    * `sudo yum install -y nvidia-docker2` 
 
-    `sudo pkill -SIGHUP dockerd`
+    * `sudo pkill -SIGHUP dockerd`
 
- 15. To set Nvidia docker as default runtime
+5. To set Nvidia docker as default runtime
 
     `sudo vim /etc/docker/daemon.json`
 
- 16. append the following at the beginning of docker deamon config file, *“default-runtime”:”nvidia”.* The resulting document should look as follows:
+6. append the following at the beginning of docker deamon config file, *“default-runtime”:”nvidia”.* The resulting document should look as follows:
 
     `{ "default-runtime":"nvidia", 
     "runtimes":{ "nvidia":{ "path":"/usr/bin/nvidia-container-runtime", "runtimeArgs":[] } }
     }`
 
-17. Restart docker
+7. Restart docker
 
     `sudo service docker start`
 
-18. Reboot
+8. Reboot
 
     `sudo reboot`
 
-19. SSH back into the instance and test nvidia-smi with the nvidia cuda image
+9. SSH back into the instance and test nvidia-smi with the nvidia cuda image
 
     `docker run --rm nvidia/cuda nvidia-smi`
 
