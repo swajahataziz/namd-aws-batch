@@ -195,34 +195,34 @@ To create an EFA-enabled security group
 2. In the navigation pane, choose Security Groups and then choose Create Security Group.
 3. In the Create Security Group window, do the following:
 
-    For Security group name, enter a descriptive name for the security group, such as efa-enabled-sg.
+    * For Security group name, enter a descriptive name for the security group, such as efa-enabled-sg.
 
-    (Optional) For Description, enter a brief description of the security group.
+    * (Optional) For Description, enter a brief description of the security group.
 
-    For VPC, select the VPC into which you intend to launch your EFA-enabled instances.
+    * For VPC, select the VPC into which you intend to launch your EFA-enabled instances.
 
-    Choose Create.
+    * Choose Create.
 
 4. Select the security group that you created, and on the Description tab, copy the Group ID.
 5. On the Inbound tab, do the following:
 
-    Choose Edit.
+    * Choose Edit.
 
-    For Type, choose All traffic.
+    * For Type, choose All traffic.
 
-    For Source, choose Custom and paste the security group ID that you copied into the field.
+    * For Source, choose Custom and paste the security group ID that you copied into the field.
 
-    Choose Save.
+    * Choose Save.
 
 6. On the Outbound tab, do the following:
 
-    Choose Edit.
+    * Choose Edit.
 
-    For Type, choose All traffic.
+    * For Type, choose All traffic.
 
-    For Destination, choose Custom and paste the security group ID that you copied into the field.
+    * For Destination, choose Custom and paste the security group ID that you copied into the field.
 
-    Choose Save.
+    * Choose Save.
 
 ### Create an EFA Placement Group
 
