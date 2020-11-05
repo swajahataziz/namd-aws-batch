@@ -7,6 +7,7 @@ This workshop assumes that you run in the AWS N. Virigia region (us-east-1)
 ------------------------
 
 * Login to the Event Engine
+
     * `https://dashboard.eventengine.run/dashboard`
 
 ## Create a Cloud9 Instance
@@ -21,6 +22,7 @@ To launch the Cloud9 IDE:
 * In the AWS Management Console, locate **Cloud9** by using the search bar, or choose **Services**, then **Cloud9**
 
 ![Image of Console](cloud9-find.png)
+
 * Choose **Create Environment**
 * Name your environment **MyHPCLabEnv** and choose **Next Step**
 * On the **Configure Settings** page, locate **Cost-saving setting** drop-down menu, choose **After a day**
@@ -35,7 +37,9 @@ Once your Cloud9 instance is up and running:
 * In the AWS Management Console, locate **EC2** by using the search bar, or choose **Services**, then **EC2**
 * Go to **Elastic Block Storage** -> **Volumes**
 * Choose the EBS Volume for your Cloud9 environment
+
 ![Image of EBS Console](EBS.png)
+
 * Select **Actions** -> **Modify Volume**
 * Increase the size to 30GB
 * Click **Modify**
@@ -47,25 +51,30 @@ Once your Cloud9 instance is up and running:
 * Open the Cloud9 terminal
 * Enter the following command to download the workshop example code:
 
-    * `git clone https://github.com/swajahataziz/namd-aws-batc`
+    * `git clone https://github.com/swajahataziz/namd-aws-batch`
 
 * Switch to the source code directory as the working directory:
+
     * `cd namd-aws-batch`
 
 * Create the docker image
+
     * `docker build --tag namd-docker:latest .`
 
 * Create an ECR repository
+
     * `POSTFIX=$(uuidgen --random | cut -d'-' -f1)`
     * `aws ecr create-repository --repository-name namd-docker-${POSTFIX}`
     * `ECR_REPOSITORY_URI=$(aws ecr describe-repositories --repository-names namd-docker-${POSTFIX} --output text --query 'repositories[0].[repositoryUri]')`
 
 * Push the docker image to the repository:
-    * Get login credentials: `$(aws ecr get-login --no-include-email --region us-east-1)`
-    * `docker tag namd-docker:latest $ECR_REPOSITORY_URI`
-    * `docker push $ECR_REPOSITORY_URI`
+    * Get login credentials: 
+        * `$(aws ecr get-login --no-include-email --region us-east-1)`
+        * `docker tag namd-docker:latest $ECR_REPOSITORY_URI`
+        * `docker push $ECR_REPOSITORY_URI`
     * Run the following command to get the image details:
-    `aws ecr describe-images --repository-name namd-docker-${POSTFIX}`
+
+        * `aws ecr describe-images --repository-name namd-docker-${POSTFIX}`
     * You will need the following information to construct and use the image URI at a later stage
     	* registryId
     	* repositoryName
@@ -186,7 +195,7 @@ To create an EFA-enabled security group
 2. In the navigation pane, choose Security Groups and then choose Create Security Group.
 3. In the Create Security Group window, do the following:
 
-    For Security group name, enter a descriptive name for the security group, such as EFA-enabled security group.
+    For Security group name, enter a descriptive name for the security group, such as efa-enabled-sg.
 
     (Optional) For Description, enter a brief description of the security group.
 
@@ -233,10 +242,10 @@ aws ec2 create-placement-group --group-name "efa" --strategy "cluster" --region 
 3. Under “Step 2: Choose an Instance Type”, select p3dn.24xlarge
 4. Click 'Next: Configure Instance Details'
 5. Under "Step 3: Configure Instance Details"
-    a. Select the VPC you configured your security group with
-    b. Select a public subnet
-    c. Choose "Add Instance to Placement group" under "Placement group". Keep the default 'Add to existing placement group' option, click on the drop down and choose efa from the list of placement groups
-    d. Under 'Elastic Fabric Adapter', click Enable
+    i. Select the VPC you configured your security group with
+    ii. Select a public subnet
+    iii. Choose "Add Instance to Placement group" under "Placement group". Keep the default 'Add to existing placement group' option, click on the drop down and choose efa from the list of placement groups
+    iv. Under 'Elastic Fabric Adapter', click Enable
 7. Under "IAM role" select "ecsInstanceRole" from the drop down.
 8. Your screen should look similar to this:
 
@@ -259,34 +268,57 @@ aws ec2 create-placement-group --group-name "efa" --strategy "cluster" --region 
 ### Install Docker & Amazon ECS Container Agent
 
 1. Update the installed packages and package cache on your instance.
-`sudo yum update -y`
+
+    `sudo yum update -y`
+
 2. Disable the docker Amazon Linux extra repository. The ecs Amazon Linux extra repository ships with its own version of Docker, so the docker extra must be disabled to avoid any potential future conflicts. This ensures that you are always using the Docker version that Amazon ECS intends for you to use with a particular version of the container agent.
-`sudo amazon-linux-extras disable docker`
+
+    `sudo amazon-linux-extras disable docker`
+
 3. Install and enable the ecs Amazon Linux extra repository.
-`sudo amazon-linux-extras install -y ecs; sudo systemctl enable --now ecs`
+
+    `sudo amazon-linux-extras install -y ecs`
+
+    `sudo systemctl enable --now ecs`
+
 4. You can verify that the agent is running and see some information about your new container instance with the agent introspection API.
-`curl -s http://localhost:51678/v1/metadata | python -mjson.tool`
+
+    `curl -s http://localhost:51678/v1/metadata | python -mjson.tool`
+
 5. Add the ec2-user to the docker group so you can execute Docker commands without using sudo.
-`sudo usermod -a -G docker ec2-user`
-5. Configure Docker to start on boot
-`sudo systemctl enable docker`
-6. Log out and log back in again to pick up the new docker group permissions. You can accomplish this by closing your current SSH terminal window and reconnecting to your instance in a new one. Your new SSH session will have the appropriate docker group permissions.
-7. Verify that the ec2-user can run Docker commands without sudo.
-`docker info`
+
+    `sudo usermod -a -G docker ec2-user`
+
+6. Configure Docker to start on boot
+
+    `sudo systemctl enable docker`
+
+7. Log out and log back in again to pick up the new docker group permissions. You can accomplish this by closing your current SSH terminal window and reconnecting to your instance in a new one. Your new SSH session will have the appropriate docker group permissions.
+
+8. Verify that the ec2-user can run Docker commands without sudo.
+
+    `docker info`
 
 ### Install the EFA Software
 
 
 1. Download the EFA software installation files. The software installation files are packaged into a compressed tarball (.tar.gz) file. To download the latest stable version, use the following command. 
-`curl -O https://efa-installer.amazonaws.com/aws-efa-installer-latest.tar.gz`
+
+    `curl -O https://efa-installer.amazonaws.com/aws-efa-installer-latest.tar.gz`
+
 2. Extract the files from the compressed .tar.gz file and navigate into the extracted directory.
-`tar -xf aws-efa-installer-latest.tar.gz`
-`cd aws-efa-installer`
+    `tar -xf aws-efa-installer-latest.tar.gz`
+
+    `cd aws-efa-installer`
+
 3. Install the EFA software. 
-`sudo ./efa_installer.sh -y`
+    
+    `sudo ./efa_installer.sh -y`
+
 4. Log out of the instance and then log back in.
+
 5. Confirm that the EFA software components were successfully installed.
-`fi_info -p efa`
+    `fi_info -p efa`
 
 ## Configure ECS Image with NVidia Docker
 -----------------------------------------------
@@ -295,16 +327,21 @@ To be able to run NVidia Docker containers, we need to create a machine image (A
 
 1. SSH into the server
 
-`sudo su
- yum install -y gcc wget vim kernel-devel-$(uname -r)
- wget http://us.download.nvidia.com/tesla/450.51.06/NVIDIA-Linux-x86_64-450.51.06.run
- chmod +x NVIDIA-Linux-x86_64-450.51.06.run
- ./NVIDIA-Linux-x86_64-450.51.06.run #follow the installation instructions 
- reboot`
+    `sudo su`
+
+    `yum install -y gcc wget vim kernel-devel-$(uname -r)`
+ 
+    `wget http://us.download.nvidia.com/tesla/450.51.06/NVIDIA-Linux-x86_64-450.51.06.run`
+    
+    `chmod +x NVIDIA-Linux-x86_64-450.51.06.run`
+    
+    `./NVIDIA-Linux-x86_64-450.51.06.run` #follow the installation instructions 
+
+    `reboot`
 
 12. SSH into the server once the system has rebooted and run the following:
 
-`sudo nvidia-smi`
+    `sudo nvidia-smi`
 
 13. It should produce a display similar to the following:
 
@@ -312,33 +349,36 @@ To be able to run NVidia Docker containers, we need to create a machine image (A
 
 14.  Next we will install nvidia-docker2 and set it up as the default docker runtime. To install nvidia-docker2:
 
-`distribution=$(. /etc/os-release;echo $ID$VERSION_ID)
- curl -s -L https://nvidia.github.io/nvidia-docker/$distribution/nvidia-docker.repo | \
- sudo tee /etc/yum.repos.d/nvidia-docker.repo
- sudo yum install -y nvidia-docker2 
- sudo pkill -SIGHUP dockerd`
+    `distribution=$(. /etc/os-release;echo $ID$VERSION_ID)`
+
+    `curl -s -L https://nvidia.github.io/nvidia-docker/$distribution/nvidia-docker.repo | \
+    sudo tee /etc/yum.repos.d/nvidia-docker.repo`
+    
+    `sudo yum install -y nvidia-docker2` 
+
+    `sudo pkill -SIGHUP dockerd`
 
  15. To set Nvidia docker as default runtime
 
- `sudo vim /etc/docker/daemon.json`
+    `sudo vim /etc/docker/daemon.json`
 
  16. append the following at the beginning of docker deamon config file, *“default-runtime”:”nvidia”.* The resulting document should look as follows:
 
- `{ *"default-runtime":"nvidia"*, 
-"runtimes":{ "nvidia":{ "path":"/usr/bin/nvidia-container-runtime", "runtimeArgs":[] } }
-}`
+    `{ "default-runtime":"nvidia", 
+    "runtimes":{ "nvidia":{ "path":"/usr/bin/nvidia-container-runtime", "runtimeArgs":[] } }
+    }`
 
 17. Restart docker
 
-`sudo service docker start`
+    `sudo service docker start`
 
 18. Reboot
 
-`sudo reboot`
+    `sudo reboot`
 
-18. SSH back into the instance and test nvidia-smi with the nvidia cuda image
+19. SSH back into the instance and test nvidia-smi with the nvidia cuda image
 
-`docker run --rm nvidia/cuda nvidia-smi`
+    `docker run --rm nvidia/cuda nvidia-smi`
 
 ### Create the AMI
 
