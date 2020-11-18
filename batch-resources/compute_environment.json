@@ -14,6 +14,9 @@
     "subnets": [
       "<same-subnet-as-in-ami>"
     ],
+    "securityGroupIds": [
+      "<security group associated with subnet>"
+    ],
     "instanceRole": "arn:aws:iam::<account-id>:instance-profile/ecsInstanceRole"
   },
   "serviceRole": "arn:aws:iam::<account-id>:role/AWSBatchServiceRole"

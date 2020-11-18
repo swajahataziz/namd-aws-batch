@@ -44,6 +44,9 @@ Once your Cloud9 instance is up and running:
 * Increase the size to 30GB
 * Click **Modify**
 * Under **Are you sure that you want to modify volume vol-xxxxxxx?** Click Yes
+* run the following commands on the cloud9 terminal
+ `sudo growpart /dev/xvda 1`
+ `sudo resize2fs /dev/xvda1`
 
 
 ## Prepare the Docker image
@@ -51,7 +54,7 @@ Once your Cloud9 instance is up and running:
 * Open the Cloud9 terminal
 * Enter the following command to download the workshop example code:
 
-    * `git clone https://github.com/swajahataziz/namd-aws-batch`
+    * `git clone https://github.com/swajahataziz/namd-aws-batch.git`
 
 * Switch to the source code directory as the working directory:
 
@@ -86,18 +89,14 @@ Once your Cloud9 instance is up and running:
 
 To allow AWS Batch to access the EC2 resources, we need to: 
 
-* Create 3 new Policies:
-	* **bucket-access-policy** to allow Batch to access the S3 buckets
-	* **ebs-autoscale-policy** to allow the EC2 instance to autoscale the EBS
+* Create a **ebs-autoscale-policy** to allow the EC2 instance to autoscale the EBS
 
 * and add 3 new Roles:
 	* AWSBatchServiceRole
 	* ecsInstanceRole
 	* BatchJobRole
 	
-## Access Policies
-
-### EBS Autoscale Policy
+## EBS Autoscale Policy
 
 * Go to the IAM Console
 * Click on **Policies**
@@ -182,7 +181,6 @@ This is a role used by individual Batch Jobs to specify permissions to AWS resou
 * Set the Role Name to **BatchJobRole**
 * Click **Create Role**
 
-
 ## Setup Security and Placement Groups
 
 ### Prepare an EFA-enabled Security Group
@@ -206,7 +204,7 @@ To create an EFA-enabled security group
 4. Select the security group that you created, and on the Description tab, copy the Group ID.
 5. On the Inbound tab, do the following:
 
-    * Choose Edit.
+    * Click on 'Edit Inbound Rules'.
 
     * For Type, choose All traffic.
 
@@ -216,11 +214,11 @@ To create an EFA-enabled security group
 
 6. On the Outbound tab, do the following:
 
-    * Choose Edit.
+    * Click on 'Edit Outbound Rules'.
 
     * For Type, choose All traffic.
 
-    * For Destination, choose Custom and paste the security group ID that you copied into the field.
+    * For Destination, choose Anywhere.
 
     * Choose Save.
 
@@ -235,7 +233,7 @@ aws ec2 create-placement-group --group-name "efa" --strategy "cluster" --region 
 ## Setup an EFA enabled EC2 Image with ECS and Nvidia Docker
 ---------------------------------
 
-### Start an EC2 Instance Docker
+### Start an EC2 Instance
 
 1. Go to EC2 Console → Instances → Launch Instance
 2. Select “*Amazon Linux 2 AMI*" from the list

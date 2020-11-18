@@ -4,8 +4,8 @@
     "parameters": {},
     "containerProperties": {
         "image": "<image-full-name>",
-        "vcpus": 200,
-        "memory": 200000,
+        "vcpus": 20,
+        "memory": 80000,
         "command": [],
         "jobRoleArn": "arn:aws:iam::<account-id>:role/ecsTaskExecutionRole",
         "volumes": [
