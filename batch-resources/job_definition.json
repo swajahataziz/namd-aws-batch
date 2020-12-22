@@ -1,13 +1,13 @@
 {
-    "jobDefinitionName": "Namd-MPI-Multinode",
+    "jobDefinitionName": "namd-job-definition-2",
     "type": "container",
     "parameters": {},
     "containerProperties": {
-        "image": "<image-full-name>",
+        "image": "<namd-image-uri>",
         "vcpus": 20,
         "memory": 80000,
         "command": [],
-        "jobRoleArn": "arn:aws:iam::<account-id>:role/ecsTaskExecutionRole",
+        "jobRoleArn": "arn:aws:iam::<account-id>:role/BatchJobRole",
         "volumes": [
             {
                 "host": {
@@ -25,7 +25,7 @@
         "environment": [
             {
                 "name": "SCRATCH_DIR",
-                "value": "/scratch"
+                "value": "/scracth"
             },
             {
                 "name": "OMP_THREADS",
@@ -46,7 +46,6 @@
                 "sourceVolume": "local"
             }
         ],
-        "privileged": false,
         "ulimits": [
             {
                 "hardLimit": -1,
@@ -56,17 +55,11 @@
         ],
         "resourceRequirements": [
             {
-                "value": "1",
+                "value": "2",
                 "type": "GPU"
             }
         ],
         "linuxParameters": {
-            "devices": [
-                {
-                    "hostPath": "/dev/infiniband",
-                    "permissions": []
-                }
-            ]
+            "devices": []
         }
-    }
 }

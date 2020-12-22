@@ -1,23 +1,25 @@
 {
-  "computeEnvironmentName": "EFA-Batch-ComputeEnvironment",
-  "type": "MANAGED",
-  "state": "ENABLED",
-  "computeResources": {
-    "type": "EC2",
-    "minvCpus": 0,
-    "maxvCpus": 960,
-    "desiredvCpus": 0,
-    "instanceTypes": [
-      "p3dn.24xlarge"
-    ],
-    "imageId": "<ami-id>",
-    "subnets": [
-      "<same-subnet-as-in-ami>"
-    ],
-    "securityGroupIds": [
-      "<security group associated with subnet>"
-    ],
-    "instanceRole": "arn:aws:iam::<account-id>:instance-profile/ecsInstanceRole"
-  },
-  "serviceRole": "arn:aws:iam::<account-id>:role/AWSBatchServiceRole"
+    "computeEnvironmentName": "namd-compute-environment",
+    "type": "MANAGED",
+    "state": "ENABLED",
+    "status": "VALID",
+    "computeResources": {
+        "type": "EC2",
+        "allocationStrategy": "BEST_FIT",
+        "minvCpus": 0,
+        "maxvCpus": 96,
+        "desiredvCpus": 0,
+        "instanceTypes": [
+            "p3dn.24xlarge"
+        ],
+        "subnets": [
+            "<enter-subnet-id>"
+        ],
+        "securityGroupIds": [
+            "<enter-security-group-id>"
+        ],
+        "instanceRole": "arn:aws:iam::<account-id>:instance-profile/ecsInstanceRole",
+        "tags": {}
+    },
+    "serviceRole": "arn:aws:iam::<account-id>:role/AWSBatchServiceRole"
 }
