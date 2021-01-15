@@ -46,7 +46,7 @@ Once your Cloud9 instance is up and running:
 * Under **Are you sure that you want to modify volume vol-xxxxxxx?** Click Yes
 * run the following commands on the cloud9 terminal
  `sudo growpart /dev/xvda 1`
- `sudo resize2fs /dev/xvda1`
+ `sudo xfs_growfs /dev/xvda1`
 
 
 ## Prepare the Docker image
@@ -392,8 +392,9 @@ Next, we'll create all the necessary AWS Batch resources.
 cd batch-resources/
 ```
 
-First we'll create the compute environment, this defines the instance type, subnet and IAM role to be used. Edit the `<same-subnet-as-in-AMI>`, `<ami-id>` and `<account-id>` sections with the pertinent information. Then create the compute environment:
+First we'll create the compute environment, this defines the instance type, subnet and IAM role to be used. Edit the `<enter-subnet-id>`, `<enter-security-group-id>` and `<account-id>` sections with the pertinent information. Then create the compute environment:
 
+- [ ] @swajahataziz, I get this error: ```Unknown parameter in input: "status", must be one of: computeEnvironmentName, type, state, computeResources, serviceRole, tags```
 
 ```bash
 aws batch create-compute-environment --cli-input-json file://compute_environment.json
