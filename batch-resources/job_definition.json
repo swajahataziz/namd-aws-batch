@@ -1,5 +1,5 @@
 {
-    "jobDefinitionName": "namd-job-definition-2",
+    "jobDefinitionName": "namd-job-definition",
     "type": "container",
     "parameters": {},
     "containerProperties": {

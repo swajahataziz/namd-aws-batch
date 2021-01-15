@@ -1,11 +1,11 @@
 {
-  "jobQueueName": "EFA-Batch-JobQueue",
+  "jobQueueName": "namd-job-queue",
   "state": "ENABLED",
   "priority": 10,
   "computeEnvironmentOrder": [
     {
       "order": 1,
-      "computeEnvironment": "EFA-Batch-ComputeEnvironment"
+      "computeEnvironment": "namd-compute-environment"
     }
   ]
 }

@@ -2,7 +2,6 @@
     "computeEnvironmentName": "namd-compute-environment",
     "type": "MANAGED",
     "state": "ENABLED",
-    "status": "VALID",
     "computeResources": {
         "type": "EC2",
         "allocationStrategy": "BEST_FIT",

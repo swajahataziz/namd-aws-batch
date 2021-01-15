@@ -232,6 +232,158 @@ To ensure optimal physical locality of instances, we create a [placement group](
 aws ec2 create-placement-group --group-name "efa" --strategy "cluster" --region [your_region]
 ```
 
+## Setup an EFA enabled EC2 Image with ECS and Nvidia Docker
+---------------------------------
+
+### Start an EC2 Instance
+
+1. Go to EC2 Console → Instances → Launch Instance
+2. Select “*Amazon Linux 2 AMI*" from the list
+3. Under “Step 2: Choose an Instance Type”, select p3dn.24xlarge
+4. Click 'Next: Configure Instance Details'
+5. Under "Step 3: Configure Instance Details"
+    1. Select the VPC you configured your security group with
+    2. Select a public subnet
+    3. Choose "Add Instance to Placement group" under "Placement group". Keep the default 'Add to existing placement group' option, click on the drop down and choose efa from the list of placement groups
+    4. Under 'Elastic Fabric Adapter', click Enable
+6. Under "IAM role" select "ecsInstanceRole" from the drop down.
+7. Your screen should look similar to this:
+
+![Image of Instance Details](instance_details.png)
+
+8. Click "Next: Add Storage"
+9. Change the size of the Root directory to 20GB and click "Next: Add Tags" -> "Next: Configure Security Groups"
+10. Under "Step 6: Configure Security Group":
+    a. Select "Select an existing security group"
+    b. Select the security group you previously created from the drop down.
+11. Click Review and Launch → Launch
+12. Under ‘Select an existing key pair or create a new key pair’, 
+    1. select Choose and existing pair if you already have an EC2 key pair. 
+    2. Otherwise select ‘Create new key pair’ from the drop down box and enter a key name under ‘Key pair name’
+
+13. Click on Launch Instances
+14. Once the instance has started, use the instance’s public IP to SSH into the instance
+
+### Install Docker & Amazon ECS Container Agent
+
+1. Update the installed packages and package cache on your instance.
+
+    `sudo yum update -y`
+
+2. Disable the docker Amazon Linux extra repository. The ecs Amazon Linux extra repository ships with its own version of Docker, so the docker extra must be disabled to avoid any potential future conflicts. This ensures that you are always using the Docker version that Amazon ECS intends for you to use with a particular version of the container agent.
+
+    `sudo amazon-linux-extras disable docker`
+
+3. Install and enable the ecs Amazon Linux extra repository.
+
+    * `sudo amazon-linux-extras install -y ecs`
+
+    * `sudo systemctl enable --now ecs`
+
+4. You can verify that the agent is running and see some information about your new container instance with the agent introspection API.
+
+    `curl -s http://localhost:51678/v1/metadata | python -mjson.tool`
+
+5. Add the ec2-user to the docker group so you can execute Docker commands without using sudo.
+
+    `sudo usermod -a -G docker ec2-user`
+
+6. Configure Docker to start on boot
+
+    `sudo systemctl enable docker`
+
+7. Log out and log back in again to pick up the new docker group permissions. You can accomplish this by closing your current SSH terminal window and reconnecting to your instance in a new one. Your new SSH session will have the appropriate docker group permissions.
+
+8. Verify that the ec2-user can run Docker commands without sudo.
+
+    `docker info`
+
+### Install the EFA Software
+
+
+1. Download the EFA software installation files. The software installation files are packaged into a compressed tarball (.tar.gz) file. To download the latest stable version, use the following command. 
+
+    `curl -O https://efa-installer.amazonaws.com/aws-efa-installer-latest.tar.gz`
+
+2. Extract the files from the compressed .tar.gz file and navigate into the extracted directory.
+    
+    * `tar -xf aws-efa-installer-latest.tar.gz`
+
+    * `cd aws-efa-installer`
+
+3. Install the EFA software. 
+    
+    `sudo ./efa_installer.sh -y`
+
+4. Log out of the instance and then log back in.
+
+5. Confirm that the EFA software components were successfully installed.
+
+    `fi_info -p efa`
+
+## Configure ECS Image with NVidia Docker
+-----------------------------------------------
+To be able to run NVidia Docker containers, we need to create a machine image (AMI) based on one of the ECS-Optimised Amazon Linux AMIs and P3.2xlarge instance type, which has a NVidia Tesla V100 with 16GB memory. Please follow the following steps to create an ECS Image with NVidia Docker:
+
+
+1. SSH into the server
+
+    * `sudo su`
+    * `yum install -y gcc wget vim kernel-devel-$(uname -r)`
+    * `wget http://us.download.nvidia.com/tesla/450.51.06/NVIDIA-Linux-x86_64-450.51.06.run`
+    * `chmod +x NVIDIA-Linux-x86_64-450.51.06.run`
+    * `./NVIDIA-Linux-x86_64-450.51.06.run` #follow the installation instructions 
+    * `reboot`
+
+2. SSH into the server once the system has rebooted and run the following:
+
+    `sudo nvidia-smi`
+
+3. It should produce a display similar to the following:
+
+![Image of Nvidia Docker](ecs-nvidia.png)
+
+4.  Next we will install nvidia-docker2 and set it up as the default docker runtime. To install nvidia-docker2:
+
+    * `distribution=$(. /etc/os-release;echo $ID$VERSION_ID)`
+
+    * `curl -s -L https://nvidia.github.io/nvidia-docker/$distribution/nvidia-docker.repo | \ 
+    sudo tee /etc/yum.repos.d/nvidia-docker.repo`
+    
+    * `sudo yum install -y nvidia-docker2` 
+
+    * `sudo pkill -SIGHUP dockerd`
+
+5. To set Nvidia docker as default runtime
+
+    `sudo vim /etc/docker/daemon.json`
+
+6. append the following at the beginning of docker deamon config file, *“default-runtime”:”nvidia”.* The resulting document should look as follows:
+
+    `{ "default-runtime":"nvidia", 
+    "runtimes":{ "nvidia":{ "path":"/usr/bin/nvidia-container-runtime", "runtimeArgs":[] } }
+    }`
+
+7. Restart docker
+
+    `sudo service docker start`
+
+8. Reboot
+
+    `sudo reboot`
+
+9. SSH back into the instance and test nvidia-smi with the nvidia cuda image
+
+    `docker run --rm nvidia/cuda nvidia-smi`
+
+### Create the AMI
+
+1. Go to the EC2 Console
+2. Click on Instances and select the running instance. 
+3. Click on Action → Image → Create Image
+4. In Image name, enter namd-ami and click Create Image
+
+
 ## AWS Batch Resources
 
 Next, we'll create all the necessary AWS Batch resources.
@@ -261,8 +413,8 @@ Now we need a job definition, this defines which docker image to use for the job
 ```bash
 aws batch register-job-definition --cli-input-json file://job_definition.json
 {
-    "jobDefinitionArn": "arn:aws:batch:us-east-1:<account-id>:job-definition/EFA-MPI-JobDefinition:1",
-    "jobDefinitionName": "EFA-MPI-JobDefinition",
+    "jobDefinitionArn": "arn:aws:batch:us-east-1:<account-id>:job-definition/namd-job-definition:1",
+    "jobDefinitionName": "namd-job-definition",
     "revision": 1
 }
 ```
@@ -272,5 +424,5 @@ aws batch register-job-definition --cli-input-json file://job_definition.json
 Finally we can submit a job!
 
 ```bash
-aws batch submit-job --region ${AWS_REGION} --job-name example-mpi-job --job-queue EFA-Batch-JobQueue --job-definition EFA-MPI-JobDefinition
+aws batch submit-job --region ${AWS_REGION} --job-name example-namd-job --job-queue namd-job-queue --job-definition namd-job-definition
 ```
