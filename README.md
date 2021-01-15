@@ -242,7 +242,6 @@ cd batch-resources/
 
 First we'll create the compute environment, this defines the instance type, subnet and IAM role to be used. Edit the `<enter-subnet-id>`, `<enter-security-group-id>` and `<account-id>` sections with the pertinent information. Then create the compute environment:
 
-- [ ] @swajahataziz, I get this error: ```Unknown parameter in input: "status", must be one of: computeEnvironmentName, type, state, computeResources, serviceRole, tags```
 
 ```bash
 aws batch create-compute-environment --cli-input-json file://compute_environment.json
