@@ -1,0 +1,6 @@
+{ 
+    "ImageId":"ami-01076a7c2563803a9",
+    "InstanceType":"p3dn.24xlarge",
+    "BlockDeviceMappings":[{"DeviceName":"/dev/sdb","Ebs":{"VolumeSize":100,"VolumeType":"gp2","DeleteOnTermination":true}}],
+    "UserData": "TUlNRS1WZXJzaW9uOiAxLjAKQ29udGVudC1UeXBlOiBtdWx0aXBhcnQvbWl4ZWQ7IGJvdW5kYXJ5PSI9PU1ZQk9VTkRBUlk9PSIKCi0tPT1NWUJPVU5EQVJZPT0KQ29udGVudC1UeXBlOiB0ZXh0L2Nsb3VkLWNvbmZpZzsgY2hhcnNldD0idXMtYXNjaWkiCgpydW5jbWQ6Ci0geXVtIC15IHVwZGF0ZQotIG1rZnMgLXQgZXh0NCAvZGV2L3NkYgotIG1rZGlyIC9zY3JhdGNoCi0gZWNobyAtZSAnL2Rldi9zZGJcdC9zY3JhdGNoXHRleHQ0XHRkZWZhdWx0c1x0MFx0MCcgfCBzdWRvIHRlZSAtYSAvZXRjL2ZzdGFiCi0gbW91bnQgL3NjcmF0Y2gKCi0tPT1NWUJPVU5EQVJZPT0tLQ=="
+}
