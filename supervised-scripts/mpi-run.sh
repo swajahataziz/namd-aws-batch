@@ -89,6 +89,8 @@ deduped
   #                        namd2 apoa1/apoa1.namd
 
   sleep 2
+
+  cp -R /usr/tmp $SCRATCH_DIR
   tar -czvf $JOB_DIR/batch_output_$AWS_BATCH_JOB_ID.tar.gz $SCRATCH_DIR/*
   aws s3 cp $JOB_DIR/batch_output_$AWS_BATCH_JOB_ID.tar.gz $S3_OUTPUT/batch_output_$AWS_BATCH_JOB_ID.tar.gz
 
