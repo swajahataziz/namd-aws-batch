@@ -90,7 +90,7 @@ deduped
 
   sleep 2
   tar -czvf $JOB_DIR/batch_output_$AWS_BATCH_JOB_ID.tar.gz $SCRATCH_DIR/*
-  aws s3 cp $JOB_DIR/batch_output_$AWS_BATCH_JOB_ID.tar.gz $S3_OUTPUT
+  aws s3 cp $JOB_DIR/batch_output_$AWS_BATCH_JOB_ID.tar.gz $S3_OUTPUT/batch_output_$AWS_BATCH_JOB_ID.tar.gz
 
   log "done! goodbye, writing exit code to 
 $AWS_BATCH_EXIT_CODE_FILE and shutting down my supervisord"
