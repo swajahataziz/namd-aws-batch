@@ -11,6 +11,23 @@
 	},
 	"buffers":
 	[
+		{
+			"file": "/Users/syedazi/Documents/Code/AWS/Batch/hpc-workshop-repo/workshops/namd-on-batch.workshop.aws.yaml",
+			"settings":
+			{
+				"buffer_size": 2399,
+				"encoding": "UTF-8",
+				"line_ending": "Unix"
+			}
+		},
+		{
+			"file": "/Users/syedazi/Documents/Code/AWS/Batch/hpc-workshop-repo/INSTALL.md",
+			"settings":
+			{
+				"buffer_size": 811,
+				"line_ending": "Unix"
+			}
+		}
 	],
 	"build_system": "",
 	"build_system_choices":
@@ -56,10 +73,19 @@
 	},
 	"expanded_folders":
 	[
-		"/Users/syedazi/Documents/Code/AWS/Batch/hpc-workshop-repo"
+		"/Users/syedazi/Documents/Code/AWS/Batch/hpc-workshop-repo",
+		"/Users/syedazi/Documents/Code/AWS/Batch/hpc-workshop-repo/modules",
+		"/Users/syedazi/Documents/Code/AWS/Batch/hpc-workshop-repo/modules/workshop",
+		"/Users/syedazi/Documents/Code/AWS/Batch/hpc-workshop-repo/modules/workshop/namd-on-batch",
+		"/Users/syedazi/Documents/Code/AWS/Batch/hpc-workshop-repo/modules/workshop/namd-on-batch/content",
+		"/Users/syedazi/Documents/Code/AWS/Batch/hpc-workshop-repo/modules/workshop/namd-on-batch/static",
+		"/Users/syedazi/Documents/Code/AWS/Batch/hpc-workshop-repo/workshops"
 	],
 	"file_history":
 	[
+		"/Users/syedazi/Documents/Code/AWS/Batch/hpc-workshop-repo/modules/workshop/namd-on-batch/content/_index.md",
+		"/Users/syedazi/Documents/Code/AWS/Batch/hpc-workshop-repo/modules/base/multi/Dockerfile",
+		"/Users/syedazi/Documents/Code/AWS/Batch/hpc-workshop-repo/modules/base/chapter/_index.md",
 		"/Users/syedazi/Documents/Code/AWS/Lambda/lambda-container-dl-inference/app.py",
 		"/Users/syedazi/Documents/Code/AWS/Lambda/lambda-container-dl-inference/infer.py",
 		"/Users/syedazi/Documents/Code/AWS/Batch/namd-nvidia-docker-supervised/batch-resources/lt-config.json",
@@ -132,8 +158,69 @@
 	"groups":
 	[
 		{
+			"selected": 1,
 			"sheets":
 			[
+				{
+					"buffer": 0,
+					"file": "/Users/syedazi/Documents/Code/AWS/Batch/hpc-workshop-repo/workshops/namd-on-batch.workshop.aws.yaml",
+					"semi_transient": false,
+					"settings":
+					{
+						"buffer_size": 2399,
+						"regions":
+						{
+						},
+						"selection":
+						[
+							[
+								2162,
+								2162
+							]
+						],
+						"settings":
+						{
+							"show_definitions": true,
+							"syntax": "Packages/YAML/YAML.sublime-syntax",
+							"tab_size": 4,
+							"translate_tabs_to_spaces": true
+						},
+						"translation.x": 0.0,
+						"translation.y": 502.0,
+						"zoom_level": 1.0
+					},
+					"stack_index": 1,
+					"type": "text"
+				},
+				{
+					"buffer": 1,
+					"file": "/Users/syedazi/Documents/Code/AWS/Batch/hpc-workshop-repo/INSTALL.md",
+					"semi_transient": false,
+					"settings":
+					{
+						"buffer_size": 811,
+						"regions":
+						{
+						},
+						"selection":
+						[
+							[
+								593,
+								593
+							]
+						],
+						"settings":
+						{
+							"show_definitions": true,
+							"syntax": "Packages/Markdown/Markdown.sublime-syntax"
+						},
+						"translation.x": 0.0,
+						"translation.y": 0.0,
+						"zoom_level": 1.0
+					},
+					"stack_index": 0,
+					"type": "text"
+				}
 			]
 		}
 	],

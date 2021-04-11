@@ -25,7 +25,7 @@
         "environment": [
             {
                 "name": "SCRATCH_DIR",
-                "value": "/scracth"
+                "value": "/scratch"
             },
             {
                 "name": "OMP_THREADS",
@@ -34,6 +34,10 @@
             {
                 "name": "MPI_THREADS",
                 "value": "1"
+            },
+            {
+                "name": "S3_OUTPUT",
+                "value": "<Enter address of your S3 bucket>"
             }
         ],
         "mountPoints": [
