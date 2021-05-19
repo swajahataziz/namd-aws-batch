@@ -11,8 +11,9 @@ ENV DEBIAN_FRONTEND noninteractive
 
 ENV NOTVISIBLE "in users profile"
 
-RUN wget -O - https://gitlab.com/NVHCP/ngc-examples/raw/master/namd/2.13/get_apoa1.sh | bash
 RUN mkdir /usr/tmp/
+
+ADD apoa1 /host_pwd/apoa1
 
 ENV INPUT "/host_pwd/apoa1/apoa1.namd"
 

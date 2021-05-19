@@ -8,6 +8,7 @@
         "minvCpus": 0,
         "maxvCpus": 96,
         "desiredvCpus": 0,
+        "launchTemplateId": "<enter launch template id of the namd lt>",
         "instanceTypes": [
             "p3dn.24xlarge"
         ],
