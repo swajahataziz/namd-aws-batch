@@ -5,7 +5,7 @@
     "containerProperties": {
         "image": "<namd-image-uri>",
         "vcpus": 20,
-        "memory": 80000,
+        "memory": 8000,
         "command": [],
         "jobRoleArn": "arn:aws:iam::<account-id>:role/BatchJobRole",
         "volumes": [

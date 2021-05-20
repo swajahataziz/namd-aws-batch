@@ -8,9 +8,7 @@
         "minvCpus": 0,
         "maxvCpus": 96,
         "desiredvCpus": 0,
-        "launchTemplate": {
-            "launchTemplateId": "<enter launch template id of the namd lt>"
-        },
+        "imageId": "<enter AMI id>",
         "instanceTypes": [
             "p3dn.24xlarge"
         ],
